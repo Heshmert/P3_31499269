@@ -10,9 +10,9 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
+    env:  # ✅ Aquí va el bloque env
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout código
@@ -21,10 +21,16 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
 
       - name: Instalar dependencias
         run: npm install
+
+      - name: Aplicar migraciones
+        run: npx prisma migrate deploy
+
+      - name: Generar cliente Prisma
+        run: npx prisma generate
 
       - name: Ejecutar pruebas
         run: npm test
