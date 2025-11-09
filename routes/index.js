@@ -72,9 +72,9 @@ router.use("/auth", authRouter);
 
 router.use("/users", usersRouter);
 
-router.use("/tags", tagsRouter);
+router.use("/admin/tags", tagsRouter);
 
-router.use("/categories", categorysRouter);
+router.use("/admin/categories", categorysRouter);
 
 router.use("/admin/products", productsRouter);
 

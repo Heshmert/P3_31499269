@@ -7,6 +7,8 @@
     "start": "node ./bin/www && npx prisma generate && npx prisma migrate deploy",
     "dev": "nodemon ./bin/www",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "prisma": "npx prisma generate && npx prisma migrate dev"
   },
   "dependencies": {
@@ -16,6 +18,7 @@
     "debug": "~2.6.9",
     "dotenv": "^17.2.3",
     "express": "~4.16.1",
+    "express-validator": "^7.3.0",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "morgan": "~1.9.1",
@@ -24,16 +27,19 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5"
   },
   "_moduleAliases": {
-  "@models": "./models",
-  "@controllers": "./controllers",
-  "@routes": "./routes",
-  "@middleware": "./middleware",
-  "@orm": "./prisma"
-}
-
+    "@models": "./models",
+    "@controllers": "./controllers",
+    "@routes": "./routes",
+    "@middleware": "./middleware",
+    "@orm": "./prisma",
+    "@services": "./services",
+    "@repositories": "./repositories"
+  }
 }
