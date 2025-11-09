@@ -1,7 +1,7 @@
-const prisma = require("../../prisma/config.prisma");
+const prisma = require('@orm/client');
 
 const getAllUsers = () =>
-  prisma.user.findMany({ select: { id: true, nombre: true, email: true } });
+  user.findMany({ select: { id: true, nombre: true, email: true } });
 
 const getUserById = (id) =>
   prisma.user.findUnique({

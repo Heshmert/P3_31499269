@@ -4,4 +4,6 @@ yarn.lock
 /generated/prisma
 .env
 
-prisma/migrations
+/prisma/dev.db
+
+/prisma/migrations/

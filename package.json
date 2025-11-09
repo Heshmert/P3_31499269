@@ -1,12 +1,13 @@
 {
   "name": "p3-31499269",
   "version": "0.0.0",
+  "type": "commonjs",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "node ./bin/www && npx prisma generate && npx prisma migrate deploy",
     "dev": "nodemon ./bin/www",
     "test": "jest",
-    "prisma": "npx prisma generate"
+    "prisma": "npx prisma generate && npx prisma migrate dev"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
@@ -16,6 +17,7 @@
     "dotenv": "^17.2.3",
     "express": "~4.16.1",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "morgan": "~1.9.1",
     "prisma": "^6.17.1",
     "swagger-jsdoc": "^6.2.8",
@@ -25,5 +27,13 @@
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4"
-  }
+  },
+  "_moduleAliases": {
+  "@models": "./models",
+  "@controllers": "./controllers",
+  "@routes": "./routes",
+  "@middleware": "./middleware",
+  "@orm": "./prisma"
+}
+
 }
