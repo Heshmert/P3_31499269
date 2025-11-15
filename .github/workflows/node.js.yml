@@ -26,11 +26,11 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
-      - name: Aplicar migraciones
-        run: npx prisma migrate deploy
-
-      - name: Generar cliente Prisma
+      - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Ejecutar pruebas
+      - name: Run migrations
+        run: npx prisma migrate deploy
+
+      - name: Run tests
         run: npm test
