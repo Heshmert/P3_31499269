@@ -1,9 +1,6 @@
 /node_modules
 pnpm-lock.yaml
 yarn.lock
-/generated/prisma
 .env
 
 /prisma/dev.db
-
-/prisma/migrations/
