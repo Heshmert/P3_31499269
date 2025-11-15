@@ -62,11 +62,11 @@ const ProductController = require('@controllers/products');
  *       200:
  *         description: Lista de productos filtrados
  */
-router.get('/products', ProductController.publicList);
+router.get('/', ProductController.publicList);
 
 /**
  * @swagger
- * /p/{id}-{slug}:
+ * /products/{id}-{slug}:
  *   get:
  *     summary: Obtiene un producto por ID y slug (self-healing)
  *     tags: [Public - Products]
@@ -89,6 +89,6 @@ router.get('/products', ProductController.publicList);
  *       404:
  *         description: Producto no encontrado
  */
-router.get('/p/:id-:slug', ProductController.publicGetBySlug);
+router.get('/:id-:slug', ProductController.publicGetBySlug);
 
 module.exports = router;

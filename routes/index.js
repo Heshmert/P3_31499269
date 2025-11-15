@@ -72,12 +72,12 @@ router.use("/auth", authRouter);
 
 router.use("/users", usersRouter);
 
-router.use("/admin/tags", tagsRouter);
+router.use("/tags", tagsRouter);
 
-router.use("/admin/categories", categorysRouter);
+router.use("/categories", categorysRouter);
 
 router.use("/admin/products", productsRouter);
 
-router.use("/", publicProductsRouter);
+router.use("/products", publicProductsRouter);
 
 module.exports = router;

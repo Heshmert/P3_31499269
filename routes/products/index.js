@@ -12,7 +12,7 @@ const auth = require('@middleware/auth');
 
 /**
  * @swagger
- * /products:
+ * /admin/products:
  *   post:
  *     summary: Crea un nuevo producto
  *     tags: [Admin - Products]
@@ -68,7 +68,7 @@ router.post('/', auth, ProductController.create);
 
 /**
  * @swagger
- * /products/{id}:
+ * /admin/products/{id}:
  *   get:
  *     summary: Obtiene un producto por ID (vista admin)
  *     tags: [Admin - Products]
@@ -90,7 +90,7 @@ router.get('/:id', auth, ProductController.getById);
 
 /**
  * @swagger
- * /products/{id}:
+ * /admin/products/{id}:
  *   put:
  *     summary: Actualiza un producto existente
  *     tags: [Admin - Products]
@@ -145,7 +145,7 @@ router.put('/:id', auth, ProductController.update);
 
 /**
  * @swagger
- * /products/{id}:
+ * /admin/products/{id}:
  *   delete:
  *     summary: Elimina un producto por ID
  *     tags: [Admin - Products]

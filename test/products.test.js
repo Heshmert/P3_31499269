@@ -28,6 +28,7 @@ describe('🌐 Rutas públicas /products', () => {
     const res = await request(app).get('/products');
     expect(res.statusCode).toBe(200);
     expect(res.body.status).toBe('success');
+    expect(res.body.data).toBeDefined();
     expect(Array.isArray(res.body.data.products)).toBe(true);
   });
 

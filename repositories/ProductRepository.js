@@ -1,4 +1,5 @@
 const prisma = require('@orm/client');
+const slugify = require('slugify');
 
 const ProductRepository = {
   findById(id) {
@@ -13,27 +14,33 @@ const ProductRepository = {
   },
 
   create(data) {
-    const { tagIds, ...productData } = data;
+    const { tagIds, categoryId, name, ...productData } = data;
+    const slug = slugify(name, { lower: true });
+
     return prisma.product.create({
       data: {
         ...productData,
-        tags: {
-          connect: tagIds.map(id => ({ id }))
-        }
+        name,
+        slug,
+        category: { connect: { id: categoryId } },
+        tags: tagIds ? { connect: tagIds.map(id => ({ id })) } : undefined
       },
       include: { category: true, tags: true }
     });
   },
 
   update(id, data) {
-    const { tagIds, ...productData } = data;
+    const { tagIds, categoryId, name, ...productData } = data;
+    const slug = slugify(name, { lower: true });
+
     return prisma.product.update({
       where: { id },
       data: {
         ...productData,
-        tags: {
-          set: tagIds.map(id => ({ id }))
-        }
+        name,
+        slug,
+        category: categoryId ? { connect: { id: categoryId } } : undefined,
+        tags: tagIds ? { set: tagIds.map(id => ({ id })) } : undefined
       },
       include: { category: true, tags: true }
     });
