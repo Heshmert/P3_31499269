@@ -1,5 +1,9 @@
 var express = require("express");
 var router = express.Router();
+const tagsRouter = require("./tags");
+const categorysRouter = require("./categorys");
+const productsRouter = require("./products");
+const publicProductsRouter = require("./products/public");
 const usersRouter = require("./users");
 const authRouter = require("./auth");
 
@@ -67,5 +71,13 @@ router.get("/about", (req, res) => {
 router.use("/auth", authRouter);
 
 router.use("/users", usersRouter);
+
+router.use("/tags", tagsRouter);
+
+router.use("/categories", categorysRouter);
+
+router.use("/admin/products", productsRouter);
+
+router.use("/products", publicProductsRouter);
 
 module.exports = router;

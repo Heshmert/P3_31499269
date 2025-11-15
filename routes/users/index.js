@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const authenticateToken = require('../../middleware/auth');
+const auth = require('../../middleware/auth');
 const usersController = require('../../controllers/users');
+
 
 /**
  * @swagger
@@ -41,7 +42,7 @@ const usersController = require('../../controllers/users');
  *                         type: string
  */
 
-router.get('/', authenticateToken, usersController.getUsers);
+router.get('/', auth, usersController.getUsers);
 
 /**
  * @swagger
@@ -80,7 +81,7 @@ router.get('/', authenticateToken, usersController.getUsers);
  *         description: Usuario no encontrado
  */
 
-router.get('/:id', authenticateToken, usersController.getUser);
+router.get('/:id', auth, usersController.getUser);
 
 /**
  * @swagger
@@ -130,7 +131,7 @@ router.get('/:id', authenticateToken, usersController.getUser);
  *         description: Error de validación o email duplicado
  */
 
-router.post('/', authenticateToken, usersController.createUser);
+router.post('/', auth, usersController.createUser);
 
 /**
  * @swagger
@@ -183,7 +184,7 @@ router.post('/', authenticateToken, usersController.createUser);
  *         description: Error al actualizar
  */
 
-router.put('/:id', authenticateToken, usersController.updateUser);
+router.put('/:id', auth, usersController.updateUser);
 
 /**
  * @swagger
@@ -215,6 +216,6 @@ router.put('/:id', authenticateToken, usersController.updateUser);
  *         description: Usuario no encontrado
  */
 
-router.delete('/:id', authenticateToken, usersController.deleteUser);
+router.delete('/:id', auth, usersController.deleteUser);
 
 module.exports = router;

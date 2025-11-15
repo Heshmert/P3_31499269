@@ -1,4 +1,5 @@
 require("dotenv").config();
+require('module-alias/register');
 const { swaggerUi, swaggerSpec } = require("./swagger");
 const routes = require("./routes");
 

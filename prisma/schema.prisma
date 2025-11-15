@@ -17,3 +17,39 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String
+  products    Product[]
+}
+
+model Tag {
+  id     Int       @id @default(autoincrement())
+  name   String    @unique
+  books  Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  stock       Int
+  slug        String    @unique
+  author      String
+  publisher   String
+  isbn        String    @unique
+  language    String
+  format      String
+  year        Int
+
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+
+  tags        Tag[]
+
+  @@index([slug])
+}
+
