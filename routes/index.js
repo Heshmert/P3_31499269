@@ -6,6 +6,7 @@ const productsRouter = require("./products");
 const publicProductsRouter = require("./products/public");
 const usersRouter = require("./users");
 const authRouter = require("./auth");
+const ordersRouter = require('./orders');
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
@@ -79,5 +80,8 @@ router.use("/categories", categorysRouter);
 router.use("/admin/products", productsRouter);
 
 router.use("/products", publicProductsRouter);
+
+router.use('/orders', ordersRouter);
+
 
 module.exports = router;
