@@ -1,12 +1,14 @@
 const request = require('supertest');
-const app = require('../app'); // tu app Express
-const prisma = require('../prisma'); // instancia de Prisma
+const app = require('../app');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const jwt = require('jsonwebtoken');
 
 // Mock del PaymentStrategy para controlar resultados
 jest.mock('../services/payments/CreditCardPaymentStrategy', () => {
   return jest.fn().mockImplementation(() => ({
     processPayment: jest.fn(async (paymentDetails, amount) => {
-      if (paymentDetails.cardToken === 'fail') {
+      if (paymentDetails.fullName === 'RECHAZADO') {
         return { success: false, error: 'Payment rejected' };
       }
       return { success: true, transactionId: 'tx123' };
@@ -19,23 +21,35 @@ describe('Orders API', () => {
   let product;
 
   beforeAll(async () => {
-    // Crear usuario de prueba y obtener JWT
-    const user = await prisma.user.create({
-      data: { email: 'test@test.com', password: 'hashedpass' }
+    // Crear categoría
+    const category = await prisma.category.create({
+      data: { name: 'TestCat', description: 'Categoria de prueba' }
     });
 
-    // Aquí deberías usar tu endpoint de login real para obtener el token
-    // Para simplificar, supongamos que tienes un helper que genera JWT:
-    token = require('../utils/jwt').generateToken({ id: user.id });
+    // Crear usuario y token
+    const user = await prisma.user.create({
+      data: { nombre: 'Tester', email: 'test@test.com', password: 'hashedpass' }
+    });
 
-    // Crear producto con stock suficiente
+    // Generar token directamente con jsonwebtoken
+    const SECRET = process.env.JWT_SECRET || 'test-secret';
+    token = jwt.sign({ id: user.id }, SECRET, { expiresIn: '1h' });
+
+    // Crear producto
     product = await prisma.product.create({
       data: {
         name: 'Producto Test',
+        description: 'Desc',
         price: 100,
         stock: 10,
         slug: 'producto-test',
-        categoryId: 1 // ajusta según tu schema
+        author: 'Autor',
+        publisher: 'Editorial',
+        isbn: 'isbn-test',
+        language: 'ES',
+        format: 'Paperback',
+        year: 2024,
+        categoryId: category.id
       }
     });
   });
@@ -44,6 +58,7 @@ describe('Orders API', () => {
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();
     await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
     await prisma.user.deleteMany();
     await prisma.$disconnect();
   });
@@ -55,7 +70,14 @@ describe('Orders API', () => {
       .send({
         items: [{ productId: product.id, quantity: 2 }],
         paymentMethod: 'CreditCard',
-        paymentDetails: { cardToken: 'ok', currency: 'USD' }
+        paymentDetails: {
+          cardNumber: '4111111111111111',
+          cvv: '123',
+          expirationMonth: '01',
+          expirationYear: '2024',
+          fullName: 'APROBADO',
+          currency: 'USD'
+        }
       });
 
     expect(res.status).toBe(201);
@@ -63,7 +85,7 @@ describe('Orders API', () => {
     expect(res.body.data.order.items[0].quantity).toBe(2);
 
     const updatedProduct = await prisma.product.findUnique({ where: { id: product.id } });
-    expect(updatedProduct.stock).toBe(8); // stock reducido
+    expect(updatedProduct.stock).toBe(8);
   });
 
   test('❌ Falla por stock insuficiente hace rollback', async () => {
@@ -73,14 +95,21 @@ describe('Orders API', () => {
       .send({
         items: [{ productId: product.id, quantity: 999 }],
         paymentMethod: 'CreditCard',
-        paymentDetails: { cardToken: 'ok', currency: 'USD' }
+        paymentDetails: {
+          cardNumber: '4111111111111111',
+          cvv: '123',
+          expirationMonth: '01',
+          expirationYear: '2024',
+          fullName: 'APROBADO',
+          currency: 'USD'
+        }
       });
 
     expect(res.status).toBe(400);
     expect(res.body.status).toBe('fail');
 
     const updatedProduct = await prisma.product.findUnique({ where: { id: product.id } });
-    expect(updatedProduct.stock).toBe(8); // stock no cambió
+    expect(updatedProduct.stock).toBe(8);
   });
 
   test('❌ Falla por pago rechazado hace rollback', async () => {
@@ -90,20 +119,25 @@ describe('Orders API', () => {
       .send({
         items: [{ productId: product.id, quantity: 1 }],
         paymentMethod: 'CreditCard',
-        paymentDetails: { cardToken: 'fail', currency: 'USD' } // mock devuelve fallo
+        paymentDetails: {
+          cardNumber: '4111111111111111',
+          cvv: '123',
+          expirationMonth: '01',
+          expirationYear: '2024',
+          fullName: 'RECHAZADO',
+          currency: 'USD'
+        }
       });
 
     expect(res.status).toBe(400);
     expect(res.body.status).toBe('fail');
 
     const updatedProduct = await prisma.product.findUnique({ where: { id: product.id } });
-    expect(updatedProduct.stock).toBe(8); // stock no cambió
+    expect(updatedProduct.stock).toBe(8);
   });
 
   test('❌ Acceso sin JWT devuelve 401', async () => {
-    const res = await request(app)
-      .get('/orders');
-
+    const res = await request(app).get('/orders');
     expect(res.status).toBe(401);
   });
 });
