@@ -1,6 +1,5 @@
 class ProductQueryBuilder {
-  constructor(params = {}) {
-    this.params = params;
+  constructor() {
     this.query = {
       where: {},
       skip: 0,
@@ -9,16 +8,15 @@ class ProductQueryBuilder {
     };
   }
 
-  applyPagination() {
-    const page = Number(this.params.page) || 1;
-    const limit = Number(this.params.limit) || 10;
-    this.query.skip = (page - 1) * limit;
-    this.query.take = limit;
+  applyPagination(page, limit) {
+    const p = Number(page) || 1;
+    const l = Number(limit) || 10;
+    this.query.skip = (p - 1) * l;
+    this.query.take = l;
     return this;
   }
 
-  applySearch() {
-    const { search } = this.params;
+  applySearch(search) {
     if (search) {
       this.query.where.OR = [
         { name: { contains: search } },
@@ -28,8 +26,7 @@ class ProductQueryBuilder {
     return this;
   }
 
-  applyCategory() {
-    const { category } = this.params;
+  applyCategory(category) {
     if (category) {
       this.query.where.category = {
         OR: [
@@ -41,13 +38,12 @@ class ProductQueryBuilder {
     return this;
   }
 
-  applyTags() {
-    const { tags } = this.params;
+  applyTags(tags) {
     if (tags) {
       const tagIds = Array.isArray(tags)
         ? tags.map(Number)
         : String(tags)
-            .split(",")
+            .split(',')
             .map((id) => parseInt(id))
             .filter((id) => !isNaN(id));
 
@@ -58,8 +54,7 @@ class ProductQueryBuilder {
     return this;
   }
 
-  applyPriceRange() {
-    const { price_min, price_max } = this.params;
+  applyPriceRange(price_min, price_max) {
     if (price_min || price_max) {
       this.query.where.price = {};
       if (price_min) this.query.where.price.gte = Number(price_min);
@@ -68,8 +63,7 @@ class ProductQueryBuilder {
     return this;
   }
 
-  applyCustomFilters() {
-    const { publisher, language, format } = this.params;
+  applyCustomFilters({ publisher, language, format }) {
     if (publisher) this.query.where.publisher = { contains: publisher };
     if (language) this.query.where.language = { contains: language };
     if (format) this.query.where.format = { contains: format };
@@ -77,12 +71,7 @@ class ProductQueryBuilder {
   }
 
   build() {
-    return this.applyPagination()
-      .applySearch()
-      .applyCategory()
-      .applyTags()
-      .applyPriceRange()
-      .applyCustomFilters().query;
+    return this.query;
   }
 }
 

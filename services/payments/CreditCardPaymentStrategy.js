@@ -1,4 +1,6 @@
-class CreditCardPaymentStrategy {
+
+const PaymentStrategy = require('./PaymentStrategy');
+class CreditCardPaymentStrategy extends PaymentStrategy {
   async processPayment(paymentDetails, amount) {
     // Construir el payload EXACTO que la API espera
     const payload = {

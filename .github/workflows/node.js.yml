@@ -13,6 +13,7 @@ jobs:
     env:  # ✅ Aquí va el bloque env
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      FAKEPAYMENT_API_KEY: ${{ secrets.FAKEPAYMENT_API_KEY }}
 
     steps:
       - name: Checkout código
