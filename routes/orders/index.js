@@ -43,11 +43,38 @@ const authMiddleware = require('@middleware/auth');
  *                 example: CreditCard
  *               paymentDetails:
  *                 type: object
+ *                 required:
+ *                   - cardNumber
+ *                   - cvv
+ *                   - expirationMonth
+ *                   - expirationYear
+ *                   - fullName
+ *                   - currency
  *                 properties:
- *                   cardToken:
+ *                   cardNumber:
  *                     type: string
+ *                     example: "4111111111111111"
+ *                   cvv:
+ *                     type: string
+ *                     example: "123"
+ *                   expirationMonth:
+ *                     type: string
+ *                     example: "01"
+ *                   expirationYear:
+ *                     type: string
+ *                     example: "2024"
+ *                   fullName:
+ *                     type: string
+ *                     example: "APROBADO"
  *                   currency:
  *                     type: string
+ *                     example: "USD"
+ *                   description:
+ *                     type: string
+ *                     example: "Compra en tienda"
+ *                   reference:
+ *                     type: string
+ *                     example: "order:12345"
  *     responses:
  *       201:
  *         description: Orden creada exitosamente
