@@ -42,11 +42,24 @@ async function getById(req, res) {
 
 // 🌐 Rutas públicas
 async function publicList(req, res) {
-  const builder = new ProductQueryBuilder(req.query);
-  const query = builder.build();
+  try {
+    const { page, limit, search, category, tags, price_min, price_max, publisher, language, format } = req.query;
 
-  const products = await ProductRepository.findMany(query);
-  res.json({ status: 'success', data: { products } });
+    const builder = new ProductQueryBuilder()
+      .applyPagination(page, limit)
+      .applySearch(search)
+      .applyCategory(category)
+      .applyTags(tags)
+      .applyPriceRange(price_min, price_max)
+      .applyCustomFilters({ publisher, language, format });
+
+    const query = builder.build();
+    const products = await ProductRepository.findMany(query);
+
+    res.json({ status: 'success', data: { products } });
+  } catch (error) {
+    res.status(400).json({ status: 'fail', data: { message: error.message } });
+  }
 }
 
 async function publicGetBySlug(req, res) {
@@ -59,7 +72,7 @@ async function publicGetBySlug(req, res) {
   }
 
   if (product.slug !== slug) {
-    return res.redirect(301, `/p/${product.id}-${product.slug}`);
+    return res.redirect(301, `/products/${product.id}-${product.slug}`);
   }
 
   res.json({ status: 'success', data: { product } });
