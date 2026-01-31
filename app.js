@@ -2,6 +2,7 @@ require("dotenv").config();
 require('module-alias/register');
 const { swaggerUi, swaggerSpec } = require("./swagger");
 const routes = require("./routes");
+const cors = require('cors');
 
 var express = require("express");
 var path = require("path");
@@ -15,6 +16,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(cors());
+app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

@@ -1,113 +1,94 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const API_URL = "http://localhost:3000";
 
-async function main() {
-  // Usuarios
-  const user1 = await prisma.user.create({
-    data: {
-      nombre: 'Juan Pérez',
-      email: 'juan@example.com',
-      password: 'hashedpassword123'
+async function seed() {
+    console.log("🚀 Iniciando recuperación de base de datos...");
+
+    try {
+        // 1. REGISTRO (Para asegurar que el usuario exista tras el borrado de la DB)
+        console.log("👤 Creando usuario principal...");
+        const regRes = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                nombre: "Usuario Prueba",
+                email: "usuario@gmail.com", 
+                password: "12345678" 
+            })
+        });
+        
+        let authData = await regRes.json();
+        let token = authData.data?.token;
+
+        // Si ya existe, hacemos login para obtener el token
+        if (!token) {
+            console.log("🔑 El usuario ya existe, obteniendo sesión...");
+            const loginRes = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: "usuario@gmail.com", password: "12345678" })
+            });
+            authData = await loginRes.json();
+            token = authData.data?.token;
+        }
+
+        if (!token) throw new Error("No se pudo obtener el Token.");
+
+        // 2. CREAR CATEGORÍA (Indispensable para el categoryId)
+        console.log("📁 Creando categoría...");
+        const catRes = await fetch(`${API_URL}/categories`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name: "Literatura" })
+        });
+        const catData = await catRes.json();
+        const catId = catData.data?.id || 1;
+
+        // 3. CREAR PRODUCTO (Formato exacto OAS 3.0)
+        console.log("📚 Creando productos...");
+        const productos = [
+            {
+                name: "Don Quijote de la Mancha",
+                description: "Alonso Quijano es un hidalgo que, tras leer demasiados libros de caballería, decide hacerse caballero andante.",
+                price: 18,
+                stock: 50,
+                categoryId: catId,
+                tagIds: [], 
+                author: "Miguel de Cervantes",
+                publisher: "Editorial Castalia",
+                isbn: "9788470398131",
+                language: "Español",
+                format: "Tapa dura",
+                year: 1605
+            }
+        ];
+
+        for (const prod of productos) {
+            const resProd = await fetch(`${API_URL}/admin/products`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify(prod)
+            });
+            
+            const result = await resProd.json();
+
+            if (resProd.ok) {
+                console.log(`✅ Creado: ${prod.name}`);
+            } else {
+                console.error(`❌ Error en ${prod.name}:`, result.data?.message || result);
+            }
+        }
+
+        console.log("✨ Seed finalizado. DB lista.");
+
+    } catch (error) {
+        console.error("❌ Error crítico:", error.message);
     }
-  });
-
-  const user2 = await prisma.user.create({
-    data: {
-      nombre: 'María Gómez',
-      email: 'maria@example.com',
-      password: 'hashedpassword456'
-    }
-  });
-
-  // Categorías
-  const category1 = await prisma.category.create({
-    data: {
-      name: 'Programación',
-      description: 'Libros y recursos de programación'
-    }
-  });
-
-  const category2 = await prisma.category.create({
-    data: {
-      name: 'Bases de Datos',
-      description: 'Libros sobre diseño y administración de bases de datos'
-    }
-  });
-
-  // Tags
-  const tag1 = await prisma.tag.create({ data: { name: 'JavaScript' } });
-  const tag2 = await prisma.tag.create({ data: { name: 'SQL' } });
-  const tag3 = await prisma.tag.create({ data: { name: 'Backend' } });
-
-  // Productos
-  const product1 = await prisma.product.create({
-    data: {
-      name: 'Aprendiendo JavaScript',
-      description: 'Guía completa para dominar JavaScript moderno',
-      price: 25.99,
-      stock: 50,
-      slug: 'aprendiendo-javascript',
-      author: 'Carlos López',
-      publisher: 'TechBooks',
-      isbn: '978-1-23456-789-0',
-      language: 'Español',
-      format: 'Paperback',
-      year: 2022,
-      categoryId: category1.id,
-      tags: { connect: [{ id: tag1.id }, { id: tag3.id }] }
-    }
-  });
-
-  const product2 = await prisma.product.create({
-    data: {
-      name: 'Fundamentos de SQL',
-      description: 'Aprende a consultar y administrar bases de datos relacionales',
-      price: 30.50,
-      stock: 40,
-      slug: 'fundamentos-sql',
-      author: 'Ana Torres',
-      publisher: 'DBBooks',
-      isbn: '978-9-87654-321-0',
-      language: 'Español',
-      format: 'Hardcover',
-      year: 2021,
-      categoryId: category2.id,
-      tags: { connect: [{ id: tag2.id }] }
-    }
-  });
-
-  // Orden de ejemplo
-  const order = await prisma.order.create({
-    data: {
-      userId: user1.id,
-      status: 'COMPLETED',
-      totalAmount: 25.99 * 2 + 30.50,
-      transactionId: 'TX123456',
-      items: {
-        create: [
-          {
-            productId: product1.id,
-            quantity: 2,
-            unitPrice: 25.99
-          },
-          {
-            productId: product2.id,
-            quantity: 1,
-            unitPrice: 30.50
-          }
-        ]
-      }
-    }
-  });
-
-  console.log('Seed completado ✅');
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+seed();

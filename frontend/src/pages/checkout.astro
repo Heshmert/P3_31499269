@@ -1,0 +1,141 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Finalizar Compra">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Datos de Pago</h1>
+        
+        <div id="summary" class="mb-6 p-4 bg-gray-50 rounded-lg border">
+            <h2 class="font-bold border-b pb-2 mb-2">Resumen de Productos</h2>
+            <div id="items-list" class="text-sm space-y-1"></div>
+        </div>
+
+        <form id="checkout-form" class="bg-white p-6 rounded-lg shadow space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-sm">Nombre en la Tarjeta</label>
+                    <input type="text" id="form-fullName" value="APROBADO" class="w-full border p-2 rounded" required />
+                </div>
+                <div>
+                    <label class="block text-sm">Número de Tarjeta</label>
+                    <input type="text" id="form-cardNumber" value="4111111111111111" class="w-full border p-2 rounded" required />
+                </div>
+                <div>
+                    <label class="block text-sm">CVV</label>
+                    <input type="text" id="form-cvv" value="123" class="w-full border p-2 rounded" required />
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded font-bold hover:bg-green-700">
+                Pagar Ahora
+            </button>
+        </form>
+    </div>
+
+<script is:inline>
+    // 1. Punto de control inicial
+    console.log("🛠️ Script de Checkout cargado");
+
+    function initCheckout() {
+        const cartData = localStorage.getItem('cart');
+        const cart = JSON.parse(cartData || '[]');
+        const itemsList = document.getElementById('items-list');
+        
+        console.log("🛒 Contenido del carrito:", cart);
+
+        if (itemsList) {
+            if (cart.length === 0) {
+                itemsList.innerHTML = '<p class="text-red-500 font-bold">El carrito está vacío. Regresa al catálogo.</p>';
+                return;
+            }
+            itemsList.innerHTML = cart.map(i => `
+                <div class="flex justify-between border-b py-1">
+                    <span>${i.name} (x${i.quantity})</span>
+                    <span class="font-bold">$${(i.price * i.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        const form = document.getElementById('checkout-form');
+        if (!form) {
+            console.error("❌ No se encontró el formulario #checkout-form");
+            return;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log("🚀 Enviando formulario...");
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("No hay token de sesión. Por favor inicia sesión.");
+                window.location.href = '/login';
+                return;
+            }
+
+            // Capturamos los valores con seguridad
+            const nameField = document.getElementById('form-fullName');
+            const cardField = document.getElementById('form-cardNumber');
+            const cvvField = document.getElementById('form-cvv');
+
+// ... dentro del submit event listener ...
+
+// 1. Validamos qué estamos sacando del carrito antes de enviar
+const formattedItems = cart.map(item => {
+    // Según tu log, el ID viene como 'productId'
+    const id = item.productId || item.id; 
+    return {
+        productId: Number(id),
+        quantity: Number(item.quantity)
+    };
+});
+
+console.log("📦 Items formateados para la API:", formattedItems);
+
+const orderBody = {
+    items: formattedItems,
+    paymentMethod: "CreditCard",
+    paymentDetails: {
+        cardNumber: document.getElementById('form-cardNumber').value,
+        cvv: document.getElementById('form-cvv').value,
+        expirationMonth: "01",
+        expirationYear: "2026",
+        fullName: document.getElementById('form-fullName').value,
+        currency: "USD",
+        description: "Compra en tienda",
+        reference: `order-${Date.now()}`
+    }
+};
+
+            try {
+                const res = await fetch('http://localhost:3000/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(orderBody)
+                });
+
+                const result = await res.json();
+                console.log("📡 Respuesta del servidor:", result);
+
+                if (res.ok) {
+                    alert("✅ PAGO EXITOSO");
+                    localStorage.removeItem('cart');
+                    window.location.href = '/';
+                } else {
+                    alert("❌ Error: " + (result.data?.message || "No se pudo procesar"));
+                }
+            } catch (err) {
+                console.error("🔥 Error crítico en la petición:", err);
+                alert("Error de conexión con el servidor.");
+            }
+        });
+    }
+
+    // Ejecutamos la función de inicio
+    initCheckout();
+</script>
+</Layout>

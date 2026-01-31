@@ -1,0 +1,89 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Mi Perfil">
+    <div class="max-w-4xl mx-auto space-y-8 mt-10">
+        <header class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-600">
+            <h1 class="text-2xl font-bold">Panel de Usuario</h1>
+            <p class="text-gray-600">Bienvenido a tu historial de compras.</p>
+        </header>
+
+        <section>
+            <h2 class="text-xl font-semibold mb-4">Mis Pedidos Recientes</h2>
+            <div id="orders-container" class="space-y-4">
+                <p class="text-gray-500 italic">Cargando historial...</p>
+            </div>
+        </section>
+    </div>
+
+    <script is:inline>
+        async function loadOrders() {
+            const API_URL = "http://localhost:3000"; // Asegúrate que coincida con tu env
+            const ordersContainer = document.getElementById('orders-container');
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                // Usamos /orders (sin tildes) como indica tu documentación
+                const res = await fetch(`${API_URL}/orders`, { 
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await res.json();
+                console.log("Historial recibido:", result);
+
+                if (res.ok && result.status === "success") {
+                    // Acceso exacto según tu JSON de respuesta
+                    const orders = result.data.orders || [];
+                    
+                    if (orders.length === 0) {
+                        ordersContainer.innerHTML = `
+                            <div class="bg-white p-6 rounded shadow text-center">
+                                <p class="text-gray-500">Aún no has realizado ninguna compra.</p>
+                                <a href="/" class="text-blue-600 hover:underline mt-2 block font-medium">Ir a la tienda</a>
+                            </div>`;
+                        return;
+                    }
+
+                    ordersContainer.innerHTML = orders.map((order) => `
+                        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center hover:border-blue-300 transition-colors">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">#ORD-${order.id}</span>
+                                    <span class="text-sm text-gray-400">${new Date(order.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <p class="font-bold text-gray-800 text-lg">Total: $${order.totalAmount.toFixed(2)}</p>
+                                <p class="text-sm text-gray-500">
+                                    Items: ${order.items.length} productos
+                                </p>
+                            </div>
+                            <div class="text-right flex flex-col items-end gap-2">
+                                <span class="px-3 py-1 ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} rounded-full text-xs font-bold uppercase">
+                                    ${order.status}
+                                </span>
+                                <button class="text-blue-600 text-xs font-semibold hover:text-blue-800 uppercase tracking-wider">
+                                    Ver Detalle
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    ordersContainer.innerHTML = '<p class="text-red-500 bg-red-50 p-4 rounded text-center">No se pudo cargar el historial. Intenta re-iniciar sesión.</p>';
+                }
+            } catch (err) {
+                console.error("Error en perfil:", err);
+                ordersContainer.innerHTML = '<p class="text-red-500 text-center">Error de conexión con el servidor.</p>';
+            }
+        }
+
+        loadOrders();
+    </script>
+</Layout>

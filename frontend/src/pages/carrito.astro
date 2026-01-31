@@ -1,0 +1,76 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Tu Carrito">
+    <h1 class="text-3xl font-bold mb-8">Resumen de Compra</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div id="cart-list" class="space-y-4">
+            <p class="text-gray-500">Tu carrito está vacío.</p>
+        </div>
+        
+        <div class="border-t mt-6 pt-6 flex justify-between items-center">
+            <span class="text-2xl font-bold">Total: <span id="total-price">$0</span></span>
+            <a href="/checkout" id="btn-checkout" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hidden">
+                Proceder al Pago
+            </a>
+        </div>
+    </div>
+
+    <script is:inline>
+        // Función para eliminar un producto específico
+        window.removeItem = (id) => {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            // Filtramos asegurando que comparamos números
+            const newCart = cart.filter((item) => Number(item.id) !== Number(id));
+            localStorage.setItem('cart', JSON.stringify(newCart));
+            renderCart(); 
+        };
+
+        function renderCart() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const list = document.getElementById('cart-list');
+            const totalEl = document.getElementById('total-price');
+            const btnCheckout = document.getElementById('btn-checkout');
+
+            if (!list || !totalEl || !btnCheckout) return;
+
+            if (cart.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Tu carrito está vacío.</p>';
+                totalEl.innerText = '$0';
+                btnCheckout.classList.add('hidden');
+                return;
+            }
+
+            // Si hay productos, mostramos el botón de pago
+            btnCheckout.classList.remove('hidden');
+            
+            let total = 0;
+            list.innerHTML = cart.map((item) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                return `
+                    <div class="flex justify-between items-center border-b pb-4">
+                        <div>
+                            <h3 class="font-bold">${item.name}</h3>
+                            <p class="text-sm text-gray-500">Cantidad: ${item.quantity} x $${item.price}</p>
+                            <button 
+                                onclick="removeItem(${item.id})" 
+                                class="text-red-500 text-xs font-semibold hover:underline mt-1"
+                            >
+                                Eliminar este producto
+                            </button>
+                        </div>
+                        <span class="font-bold">$${subtotal.toFixed(2)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.innerText = `$${total.toFixed(2)}`;
+        }
+
+        // Ejecutar al cargar la página
+        renderCart();
+    </script>
+</Layout>

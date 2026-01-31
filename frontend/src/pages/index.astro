@@ -1,0 +1,132 @@
+---
+import Layout from '../layouts/Layout.astro';
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3000/api";
+
+let categorias = [];
+try {
+	// Intenta con 'categorías' o 'categories' según tu backend real
+	const catRes = await fetch(`${API_URL}/categorías`); 
+	if (catRes.ok) {
+		categorias = await catRes.json();
+	}
+} catch (e) {
+	console.error("Error cargando categorías:", e);
+}
+---
+
+<Layout title="Catálogo de Productos">
+	<div class="flex flex-col md:flex-row gap-8">
+		<aside class="w-full md:w-64 space-y-6 bg-white p-4 rounded shadow-sm h-fit">
+			<h2 class="font-bold text-lg">Filtros</h2>
+			
+			<div>
+				<label class="block text-sm font-medium">Buscar</label>
+				<input type="text" id="filter-search" class="w-full border p-2 rounded text-sm" placeholder="Nombre, autor..." />
+			</div>
+
+			<div>
+				<label class="block text-sm font-medium">Categoría</label>
+				<select id="filter-category" class="w-full border p-2 rounded text-sm">
+					<option value="">Todas</option>
+					{categorias.map((cat: any) => (
+						<option value={cat.id}>{cat.name}</option>
+					))}
+				</select>
+			</div>
+
+			<div>
+				<label class="block text-sm font-medium">Precio Máximo</label>
+				<input type="range" id="filter-price" min="0" max="1000" step="10" class="w-full" />
+				<span id="price-value" class="text-xs text-gray-500">$1000</span>
+			</div>
+
+			<button id="apply-filters" class="w-full bg-blue-600 text-white py-2 rounded text-sm font-bold">
+				Aplicar Filtros
+			</button>
+		</aside>
+
+		<section class="flex-1">
+			<div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+				<p class="text-center col-span-full">Cargando productos...</p>
+			</div>
+		</section>
+	</div>
+
+	<script>
+		const API_URL = import.meta.env.PUBLIC_API_URL;
+		const grid = document.getElementById('products-grid');
+		const btnFilter = document.getElementById('apply-filters');
+
+		async function loadProducts() {
+    const search = (document.getElementById('filter-search') as HTMLInputElement).value;
+    const category = (document.getElementById('filter-category') as HTMLSelectElement).value;
+    const priceMax = (document.getElementById('filter-price') as HTMLInputElement).value;
+
+    // 1. Usamos los nombres de parámetros que pide tu API (en inglés)
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (category) params.append('category', category);
+    if (priceMax) params.append('price_max', priceMax);
+
+    // Tu URL confirmada es /products (en inglés y plural)
+    const targetUrl = `${API_URL}/products?${params.toString()}`;
+    console.log("Cargando desde:", targetUrl);
+
+    try {
+        const res = await fetch(targetUrl);
+        const result = await res.json();
+
+        // 2. Accedemos a result.data.products según tu respuesta de servidor
+        const products = result.data?.products || [];
+
+        if (grid) {
+            if (products.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center py-10">No se encontraron productos.</p>';
+                return;
+            }
+
+            grid.innerHTML = products.map((p: any) => `
+                <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
+                    <div class="h-48 bg-gray-100 rounded mb-4 flex items-center justify-center text-gray-400">
+                        <span class="text-xs uppercase font-bold tracking-widest">${p.format || 'Libro'}</span>
+                    </div>
+                    <h3 class="font-bold text-lg leading-tight h-12 overflow-hidden">${p.name}</h3>
+                    <p class="text-gray-500 text-sm mb-2">${p.author || 'Autor desconocido'}</p>
+                    <div class="mt-4 flex justify-between items-center">
+                        <span class="text-xl font-bold text-blue-700">$${p.price}</span>
+                        <button 
+                            onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price})"
+                            class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 active:scale-95 transition-transform"
+                        >
+                            Añadir
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        console.error("Error cargando productos:", e);
+        if (grid) grid.innerHTML = '<p class="text-red-500">Error de conexión.</p>';
+    }
+}
+
+		// Función global para el botón de añadir (lógica simple de carrito)
+		(window as any).addToCart = (id: number, name: string, price: number) => {
+			const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+			const existing = cart.find((item: any) => item.productId === id);
+			
+			if (existing) {
+				existing.quantity += 1;
+			} else {
+				cart.push({ productId: id, name, price, quantity: 1 });
+			}
+			
+			localStorage.setItem('cart', JSON.stringify(cart));
+			alert(`${name} añadido al carrito`);
+		};
+
+		btnFilter?.addEventListener('click', loadProducts);
+		// Carga inicial
+		loadProducts();
+	</script>
+</Layout>
