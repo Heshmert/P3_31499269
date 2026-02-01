@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL;
+const API_URL = process.env.PUBLIC_API_URL;
 
 async function seed() {
     console.log("🚀 Iniciando recuperación total de base de datos...");

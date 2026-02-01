@@ -6,11 +6,11 @@ const server = http.createServer(app);
 
 server.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);
+  try {
+    require('../prisma/seed.js'); 
+    console.log("✅ El archivo seed.js ha sido invocado.");
+  } catch (error) {
+    console.error("❌ No se pudo cargar el seed:", error.message);
+  }
 });
 
-const { exec } = require('child_process');
-
-// Esto tira el comando en cuanto el código pase por aquí
-exec('node prisma/seed.js', (err, stdout) => {
-    if (stdout) console.log("Seed exitoso:", stdout);
-});

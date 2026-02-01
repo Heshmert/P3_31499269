@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="es"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>Tu Carrito</title><link rel="stylesheet" href="/_astro/carrito.BjKxnswG.css"></head> <body class="bg-gray-50 text-gray-900"> <nav class="bg-white shadow-md p-4 mb-8"> <div class="container mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-blue-600">LIBRERIA</a> <div class="flex gap-4 items-center" id="nav-links"> <a href="/" class="hover:text-blue-500">Productos</a> <a href="/carrito" class="hover:text-blue-500">🛒 Carrito</a> </div> </div> </nav> <main class="container mx-auto px-4">  <div class="max-w-4xl mx-auto mt-10 px-4"> <h1 class="text-3xl font-black mb-8 uppercase tracking-tighter text-gray-800">Tu Bolsa de Compra</h1> <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"> <div id="cart-list" class="divide-y divide-gray-100 p-6"> <p class="text-gray-400 text-center py-10">Cargando carrito...</p> </div> <div class="bg-gray-50 p-8 flex flex-col md:flex-row justify-between items-center gap-6"> <div> <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Total a pagar</span> <span class="text-4xl font-black text-gray-900" id="total-price">$0.00</span> </div> <div id="checkout-container"></div> </div> </div> <div class="mt-6 text-center"> <a href="/" class="text-xs font-bold text-blue-600 uppercase hover:underline">← Seguir comprando</a> </div> </div> <script>
+        // 1. Lógica para sumar 1 unidad (validando stock)
+        window.addItem = (id) => {
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const item = cart.find(i => Number(i.productId) === Number(id));
+            
+            if (item) {
+                if (item.quantity >= item.stock) {
+                    alert(`Lo sentimos, solo hay ${item.stock} unidades disponibles.`);
+                    return;
+                }
+                item.quantity += 1;
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+            }
+        };
+
+        // 2. Lógica para restar 1 unidad
+        window.subtractItem = (id) => {
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const index = cart.findIndex(i => Number(i.productId) === Number(id));
+            
+            if (index !== -1) {
+                if (cart[index].quantity > 1) {
+                    cart[index].quantity -= 1;
+                } else {
+                    cart.splice(index, 1); // Si es 1, lo elimina
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+            }
+        };
+
+        // 3. Eliminar todo el grupo de una vez
+        window.removeGroup = (id) => {
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart = cart.filter(i => Number(i.productId) !== Number(id));
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+        };
+
+        function renderCart() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const list = document.getElementById('cart-list');
+            const totalEl = document.getElementById('total-price');
+            const checkoutContainer = document.getElementById('checkout-container');
+            const token = localStorage.getItem('token');
+
+            if (cart.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-16">
+                        <p class="text-gray-400 italic mb-4 uppercase text-xs font-bold tracking-widest">El carrito está vacío</p>
+                        <a href="/" class="bg-gray-900 text-white px-6 py-2 rounded text-[10px] font-bold uppercase">Ir al catálogo</a>
+                    </div>
+                `;
+                totalEl.innerText = '$0.00';
+                checkoutContainer.innerHTML = '';
+                return;
+            }
+
+            let total = 0;
+            list.innerHTML = cart.map((item) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                const id = item.productId;
+
+                return `
+                    <div class="py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="font-black text-gray-800 uppercase text-sm">${item.name}</h3>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Precio Unitario: $${item.price}</p>
+                            <button onclick="removeGroup(${id})" class="text-[9px] text-red-400 font-bold uppercase mt-2 hover:text-red-600 transition-colors">
+                                [ Eliminar de la bolsa ]
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center border-2 border-gray-900 rounded-lg overflow-hidden h-10">
+                                <button onclick="subtractItem(${id})" class="px-4 hover:bg-gray-100 font-bold text-lg border-r border-gray-900">-</button>
+                                <span class="px-6 font-black text-sm">${item.quantity}</span>
+                                <button onclick="addItem(${id})" class="px-4 hover:bg-gray-100 font-bold text-lg border-l border-gray-900">+</button>
+                            </div>
+
+                            <div class="text-right min-w-[100px]">
+                                <span class="text-xs text-gray-400 block font-bold uppercase">Subtotal</span>
+                                <span class="font-black text-gray-900 text-lg">$${subtotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.innerText = `$${total.toFixed(2)}`;
+
+            // Botones de acción según sesión
+            if (!token) {
+                checkoutContainer.innerHTML = `
+                    <a href="/login" class="bg-orange-500 text-white px-10 py-4 rounded-lg font-black uppercase text-xs tracking-widest hover:bg-orange-600 shadow-xl transition-all block text-center">
+                        Inicia sesión para pagar
+                    </a>
+                `;
+            } else {
+                checkoutContainer.innerHTML = `
+                    <a href="/checkout" class="bg-blue-600 text-white px-10 py-4 rounded-lg font-black uppercase text-xs tracking-widest hover:bg-blue-700 shadow-xl transition-all block text-center">
+                        Proceder al Pago
+                    </a>
+                `;
+            }
+        }
+
+        // Carga inicial
+        renderCart();
+    </script>  </main> <script type="module">const t=localStorage.getItem("token"),e=document.getElementById("nav-links");t?(e.innerHTML+=`
+					<a href="/perfil" class="hover:text-blue-500">Mi Perfil</a>
+					<button id="logout" class="bg-red-500 text-white px-3 py-1 rounded">Salir</button>
+				`,document.getElementById("logout")?.addEventListener("click",()=>{localStorage.removeItem("token"),window.location.href="/login"})):e.innerHTML+=`
+					<a href="/login" class="hover:text-blue-500">Login</a>
+					<a href="/registro" class="hover:text-blue-500 font-bold">Registro</a>
+				`;</script> </body> </html>
