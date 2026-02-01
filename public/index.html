@@ -2,108 +2,33 @@
 Aplicar Filtros
 </button> <button type="reset" id="btn-reset" class="w-full text-gray-400 py-1 text-[10px] uppercase hover:underline">
 Limpiar Filtros
-</button> </form> </aside> <main class="flex-1"> <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div> </main> </div> <script>
-    const API_URL = import.meta.env.PUBLIC_API_URL;
-    const grid = document.getElementById('products-grid');
-    const filterForm = document.getElementById('filter-form');
-    const selectCategories = document.getElementById('select-categories');
-    const selectTags = document.getElementById('select-tags');
-
-    async function initFilters() {
-        try {
-            const [catRes, tagRes] = await Promise.all([
-                fetch(`${API_URL}/categories`),
-                fetch(`${API_URL}/tags`)
-            ]);
-            const cats = await catRes.json();
-            const tags = await tagRes.json();
-
-            selectCategories.innerHTML = '<option value="">Todas las categorías</option>' + 
-                cats.data.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-
-            selectTags.innerHTML = '<option value="">Cualquier etiqueta</option>' + 
-                tags.data.tags.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        } catch (error) { console.error("Error filtros:", error); }
-    }
-
-    async function loadProducts(queryString = "") {
-        grid.innerHTML = '<div class="col-span-full text-center py-20 text-gray-400">Consultando catálogo...</div>';
-        try {
-            const response = await fetch(`${API_URL}/products?${queryString}`);
-            const result = await response.json();
-            const products = result.data.products || [];
-
-            if (products.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center py-20 border-2 border-dashed rounded text-gray-400">Sin resultados</div>';
-                return;
-            }
-
-            grid.innerHTML = products.map(p => `
+</button> </form> </aside> <main class="flex-1"> <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div> </main> </div> <script type="module">const n="http://localhost:3000",s=document.getElementById("products-grid"),l=document.getElementById("filter-form"),d=document.getElementById("select-categories"),u=document.getElementById("select-tags");async function g(){try{const[e,a]=await Promise.all([fetch(`${n}/categories`),fetch(`${n}/tags`)]),o=await e.json(),r=await a.json();d.innerHTML='<option value="">Todas las categorías</option>'+o.data.categories.map(t=>`<option value="${t.name}">${t.name}</option>`).join(""),u.innerHTML='<option value="">Cualquier etiqueta</option>'+r.data.tags.map(t=>`<option value="${t.id}">${t.name}</option>`).join("")}catch(e){console.error("Error filtros:",e)}}async function c(e=""){s.innerHTML='<div class="col-span-full text-center py-20 text-gray-400">Consultando catálogo...</div>';try{const r=(await(await fetch(`${n}/products?${e}`)).json()).data.products||[];if(r.length===0){s.innerHTML='<div class="col-span-full text-center py-20 border-2 border-dashed rounded text-gray-400">Sin resultados</div>';return}s.innerHTML=r.map(t=>`
                 <div class="bg-white border border-gray-100 p-5 rounded-lg flex flex-col hover:border-blue-400 transition-all">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-[9px] font-bold bg-blue-50 text-blue-500 px-2 py-0.5 rounded uppercase">${p.category.name}</span>
-                        <span class="font-bold text-gray-900">$${p.price}</span>
+                        <span class="text-[9px] font-bold bg-blue-50 text-blue-500 px-2 py-0.5 rounded uppercase">${t.category.name}</span>
+                        <span class="font-bold text-gray-900">$${t.price}</span>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-sm mb-1 uppercase">${p.name}</h3>
-                    <p class="text-[10px] text-gray-400 mb-1 italic">Autor: ${p.author}</p>
+                    <h3 class="font-bold text-gray-800 text-sm mb-1 uppercase">${t.name}</h3>
+                    <p class="text-[10px] text-gray-400 mb-1 italic">Autor: ${t.author}</p>
                     
-                    <p class="text-[10px] font-bold mb-3 ${p.stock > 0 ? 'text-green-600' : 'text-red-600'}">
-                        STOCK DISPONIBLE: ${p.stock}
+                    <p class="text-[10px] font-bold mb-3 ${t.stock>0?"text-green-600":"text-red-600"}">
+                        STOCK DISPONIBLE: ${t.stock}
                     </p>
 
-                    <p class="text-xs text-gray-500 line-clamp-2 mb-4 flex-grow leading-relaxed">${p.description}</p>
+                    <p class="text-xs text-gray-500 line-clamp-2 mb-4 flex-grow leading-relaxed">${t.description}</p>
                     <div class="flex gap-1 mb-4 flex-wrap">
-                        ${p.tags.map(t => `<span class="text-[8px] bg-gray-50 text-gray-400 border border-gray-100 px-1.5 py-0.5 rounded">#${t.name}</span>`).join('')}
+                        ${t.tags.map(i=>`<span class="text-[8px] bg-gray-50 text-gray-400 border border-gray-100 px-1.5 py-0.5 rounded">#${i.name}</span>`).join("")}
                     </div>
                     
                     <button 
-                        onclick="addToCart({productId: ${p.id}, name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, stock: ${p.stock}})"
+                        onclick="addToCart({productId: ${t.id}, name: '${t.name.replace(/'/g,"\\'")}', price: ${t.price}, stock: ${t.stock}})"
                         class="w-full border-2 border-gray-900 py-2 rounded text-[10px] font-black uppercase hover:bg-gray-900 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                        ${p.stock <= 0 ? 'disabled' : ''}
+                        ${t.stock<=0?"disabled":""}
                     >
-                        ${p.stock > 0 ? 'Agregar al Carrito' : 'Agotado'}
+                        ${t.stock>0?"Agregar al Carrito":"Agotado"}
                     </button>
                 </div>
-            `).join('');
-        } catch (error) { grid.innerHTML = '<div class="col-span-full text-center py-20 text-red-400">Error de API</div>'; }
-    }
-
-    // 3. Lógica de Carrito con Bloqueo de Stock
-    window.addToCart = (product) => {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const existing = cart.find(item => item.productId === product.productId);
-        
-        const currentQty = existing ? existing.quantity : 0;
-
-        // Si lo que intenta agregar supera el stock real, no lo dejamos
-        if (currentQty >= product.stock) {
-            alert(`No puedes agregar más. Solo quedan ${product.stock} unidades en stock.`);
-            return;
-        }
-
-        if (existing) {
-            existing.quantity += 1;
-        } else {
-            cart.push({ ...product, quantity: 1 });
-        }
-        
-        localStorage.setItem('cart', JSON.stringify(cart));
-        alert(`${product.name} añadido al carrito.`);
-    };
-
-    filterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const params = new URLSearchParams(new FormData(filterForm));
-        loadProducts(params.toString());
-    });
-
-    document.getElementById('btn-reset').addEventListener('click', () => {
-        setTimeout(() => loadProducts(), 10);
-    });
-
-    initFilters();
-    loadProducts();
-</script>  </main> <script type="module">const t=localStorage.getItem("token"),e=document.getElementById("nav-links");t?(e.innerHTML+=`
+            `).join("")}catch{s.innerHTML='<div class="col-span-full text-center py-20 text-red-400">Error de API</div>'}}window.addToCart=e=>{const a=JSON.parse(localStorage.getItem("cart")||"[]"),o=a.find(t=>t.productId===e.productId);if((o?o.quantity:0)>=e.stock){alert(`No puedes agregar más. Solo quedan ${e.stock} unidades en stock.`);return}o?o.quantity+=1:a.push({...e,quantity:1}),localStorage.setItem("cart",JSON.stringify(a)),alert(`${e.name} añadido al carrito.`)};l.addEventListener("submit",e=>{e.preventDefault();const a=new URLSearchParams(new FormData(l));c(a.toString())});document.getElementById("btn-reset").addEventListener("click",()=>{setTimeout(()=>c(),10)});g();c();</script>  </main> <script type="module">const t=localStorage.getItem("token"),e=document.getElementById("nav-links");t?(e.innerHTML+=`
 					<a href="/perfil" class="hover:text-blue-500">Mi Perfil</a>
 					<button id="logout" class="bg-red-500 text-white px-3 py-1 rounded">Salir</button>
 				`,document.getElementById("logout")?.addEventListener("click",()=>{localStorage.removeItem("token"),window.location.href="/login"})):e.innerHTML+=`
