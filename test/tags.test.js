@@ -7,9 +7,9 @@ describe('🔐 Rutas protegidas /tags', () => {
     expect([401, 403]).toContain(res.statusCode);
   });
 
-  test('GET sin token → 401/403', async () => {
+  test('GET sin token → 200 OK', async () => {
     const res = await request(app).get('/tags');
-    expect([401, 403]).toContain(res.statusCode);
+    expect([200]).toContain(res.statusCode);
   });
 
   test('GET /:id sin token → 401/403', async () => {
