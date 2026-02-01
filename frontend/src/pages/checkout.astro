@@ -52,7 +52,7 @@ import Layout from '../layouts/Layout.astro';
         </form>
     </div>
 
-<script is:inline>
+<script>
     // 1. Carga de productos del carrito
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const itemsList = document.getElementById('items-list');
