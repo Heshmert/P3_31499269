@@ -49,7 +49,7 @@ import Layout from '../layouts/Layout.astro';
         let ordersData = []; // Guardaremos las órdenes aquí para acceder rápido al detalle
 
         async function loadOrders() {
-            const API_URL = "http://localhost:3000";
+            const API_URL = import.meta.env.PUBLIC_API_URL;
             const ordersContainer = document.getElementById('orders-container');
             const token = localStorage.getItem('token');
 

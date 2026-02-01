@@ -56,6 +56,7 @@ import Layout from '../layouts/Layout.astro';
     // 1. Carga de productos del carrito
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const itemsList = document.getElementById('items-list');
+    const API_URL = import.meta.env.PUBLIC_API_URL;
 
     if (cart.length === 0) {
         itemsList.innerHTML = '<p class="text-center text-gray-400">Tu carrito está vacío</p>';
@@ -93,7 +94,7 @@ import Layout from '../layouts/Layout.astro';
         };
 
         try {
-            const res = await fetch('http://localhost:3000/orders', {
+            const res = await fetch(`${API_URL}/orders`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

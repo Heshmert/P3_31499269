@@ -3,7 +3,7 @@ Aplicar Filtros
 </button> <button type="reset" id="btn-reset" class="w-full text-gray-400 py-1 text-[10px] uppercase hover:underline">
 Limpiar Filtros
 </button> </form> </aside> <main class="flex-1"> <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div> </main> </div> <script>
-    const API_URL = "http://localhost:3000";
+    const API_URL = import.meta.env.PUBLIC_API_URL;
     const grid = document.getElementById('products-grid');
     const filterForm = document.getElementById('filter-form');
     const selectCategories = document.getElementById('select-categories');
