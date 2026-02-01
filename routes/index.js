@@ -8,10 +8,6 @@ const usersRouter = require("./users");
 const authRouter = require("./auth");
 const ordersRouter = require('./orders');
 
-/* GET home page. */
-router.get("/", function (req, res, next) {
-  res.render("index", { title: "Express" });
-});
 
 /**
  * @swagger
