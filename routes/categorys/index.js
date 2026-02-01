@@ -24,7 +24,7 @@ const auth = require('@middleware/auth');
  *       200:
  *         description: Lista de categorías
  */
-router.get('/', auth, CategoryController.getAll);
+router.get('/', CategoryController.getAll);
 
 /**
  * @swagger

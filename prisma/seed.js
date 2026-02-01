@@ -1,113 +1,118 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const API_URL = "http://localhost:3000";
 
-async function main() {
-  // Usuarios
-  const user1 = await prisma.user.create({
-    data: {
-      nombre: 'Juan Pérez',
-      email: 'juan@example.com',
-      password: 'hashedpassword123'
+async function seed() {
+    console.log("🚀 Iniciando recuperación total de base de datos...");
+
+    try {
+        // 1. REGISTRO/LOGIN
+        console.log("👤 Configurando usuario...");
+        const regRes = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                nombre: "Admin Prueba",
+                email: "usuario@gmail.com", 
+                password: "12345678" 
+            })
+        });
+        
+        let authData = await regRes.json();
+        let token = authData.data?.token;
+
+        if (!token) {
+            const loginRes = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: "usuario@gmail.com", password: "12345678" })
+            });
+            authData = await loginRes.json();
+            token = authData.data?.token;
+        }
+
+        if (!token) throw new Error("No se pudo obtener el Token.");
+        const headers = { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        };
+
+        // 2. CREAR 5 CATEGORÍAS (IDs esperados: 1 al 5)
+        console.log("📁 Creando categorías...");
+        const categorias = ["Literatura", "Ciencia Ficción", "Historia", "Tecnología", "Biografías"];
+        for (const cat of categorias) {
+            await fetch(`${API_URL}/categories`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ name: cat, description: `Libros de ${cat}` })
+            });
+        }
+
+        // 3. CREAR 5 TAGS (IDs esperados: 1 al 5)
+        console.log("🏷️ Creando etiquetas...");
+        const tags = ["Best Seller", "Clásico", "Nuevo", "Oferta", "Recomendado"];
+        for (const tag of tags) {
+            await fetch(`${API_URL}/tags`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ name: tag })
+            });
+        }
+
+        // 4. CREAR 5 PRODUCTOS
+        console.log("📚 Creando productos...");
+        const productos = [
+            {
+                name: "Don Quijote de la Mancha",
+                description: "La obra cumbre de la lengua española.",
+                price: 20, stock: 50, categoryId: 1, tagIds: [1, 2],
+                author: "Miguel de Cervantes", publisher: "Castalia", isbn: "9781",
+                language: "Español", format: "Tapa dura", year: 1605
+            },
+            {
+                name: "Dune",
+                description: "La épica de ciencia ficción en el planeta Arrakis.",
+                price: 25, stock: 30, categoryId: 2, tagIds: [1, 3],
+                author: "Frank Herbert", publisher: "Debolsillo", isbn: "9782",
+                language: "Español", format: "Bolsillo", year: 1965
+            },
+            {
+                name: "Breve historia del tiempo",
+                description: "Exploración del cosmos y los agujeros negros.",
+                price: 15, stock: 20, categoryId: 4, tagIds: [5],
+                author: "Stephen Hawking", publisher: "Bantam", isbn: "9783",
+                language: "Español", format: "Digital", year: 1988
+            },
+            {
+                name: "Sapiens",
+                description: "Una breve historia de la humanidad.",
+                price: 22, stock: 40, categoryId: 3, tagIds: [1],
+                author: "Yuval Noah Harari", publisher: "Debate", isbn: "9784",
+                language: "Español", format: "Tapa blanda", year: 2011
+            },
+            {
+                name: "Steve Jobs",
+                description: "La biografía exclusiva del fundador de Apple.",
+                price: 18, stock: 15, categoryId: 5, tagIds: [2, 5],
+                author: "Walter Isaacson", publisher: "Simon & Schuster", isbn: "9785",
+                language: "Español", format: "Tapa dura", year: 2011
+            }
+        ];
+
+        for (const prod of productos) {
+            const resProd = await fetch(`${API_URL}/admin/products`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(prod)
+            });
+            const result = await resProd.json();
+            if (resProd.ok) console.log(`✅ Creado: ${prod.name}`);
+            else console.error(`❌ Error en ${prod.name}:`, result);
+        }
+
+        console.log("✨ Base de Datos Restaurada con Éxito.");
+
+    } catch (error) {
+        console.error("❌ Error crítico:", error.message);
     }
-  });
-
-  const user2 = await prisma.user.create({
-    data: {
-      nombre: 'María Gómez',
-      email: 'maria@example.com',
-      password: 'hashedpassword456'
-    }
-  });
-
-  // Categorías
-  const category1 = await prisma.category.create({
-    data: {
-      name: 'Programación',
-      description: 'Libros y recursos de programación'
-    }
-  });
-
-  const category2 = await prisma.category.create({
-    data: {
-      name: 'Bases de Datos',
-      description: 'Libros sobre diseño y administración de bases de datos'
-    }
-  });
-
-  // Tags
-  const tag1 = await prisma.tag.create({ data: { name: 'JavaScript' } });
-  const tag2 = await prisma.tag.create({ data: { name: 'SQL' } });
-  const tag3 = await prisma.tag.create({ data: { name: 'Backend' } });
-
-  // Productos
-  const product1 = await prisma.product.create({
-    data: {
-      name: 'Aprendiendo JavaScript',
-      description: 'Guía completa para dominar JavaScript moderno',
-      price: 25.99,
-      stock: 50,
-      slug: 'aprendiendo-javascript',
-      author: 'Carlos López',
-      publisher: 'TechBooks',
-      isbn: '978-1-23456-789-0',
-      language: 'Español',
-      format: 'Paperback',
-      year: 2022,
-      categoryId: category1.id,
-      tags: { connect: [{ id: tag1.id }, { id: tag3.id }] }
-    }
-  });
-
-  const product2 = await prisma.product.create({
-    data: {
-      name: 'Fundamentos de SQL',
-      description: 'Aprende a consultar y administrar bases de datos relacionales',
-      price: 30.50,
-      stock: 40,
-      slug: 'fundamentos-sql',
-      author: 'Ana Torres',
-      publisher: 'DBBooks',
-      isbn: '978-9-87654-321-0',
-      language: 'Español',
-      format: 'Hardcover',
-      year: 2021,
-      categoryId: category2.id,
-      tags: { connect: [{ id: tag2.id }] }
-    }
-  });
-
-  // Orden de ejemplo
-  const order = await prisma.order.create({
-    data: {
-      userId: user1.id,
-      status: 'COMPLETED',
-      totalAmount: 25.99 * 2 + 30.50,
-      transactionId: 'TX123456',
-      items: {
-        create: [
-          {
-            productId: product1.id,
-            quantity: 2,
-            unitPrice: 25.99
-          },
-          {
-            productId: product2.id,
-            quantity: 1,
-            unitPrice: 30.50
-          }
-        ]
-      }
-    }
-  });
-
-  console.log('Seed completado ✅');
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+seed();

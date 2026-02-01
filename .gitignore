@@ -2,4 +2,5 @@
 pnpm-lock.yaml
 yarn.lock
 .env
-
+/public 
+./prisma/dev.db

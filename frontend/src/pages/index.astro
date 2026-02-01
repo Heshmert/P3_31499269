@@ -1,8 +1,59 @@
-<!DOCTYPE html><html lang="es"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>Librería Dinámica</title><link rel="stylesheet" href="/_astro/carrito.BjKxnswG.css"></head> <body class="bg-gray-50 text-gray-900"> <nav class="bg-white shadow-md p-4 mb-8"> <div class="container mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-blue-600">LIBRERIA</a> <div class="flex gap-4 items-center" id="nav-links"> <a href="/" class="hover:text-blue-500">Productos</a> <a href="/carrito" class="hover:text-blue-500">🛒 Carrito</a> </div> </div> </nav> <main class="container mx-auto px-4">  <div class="flex flex-col md:flex-row gap-6 mt-6"> <aside class="w-full md:w-72 bg-white p-5 rounded border border-gray-200 h-fit sticky top-4"> <h2 class="font-bold text-xs uppercase mb-4 text-gray-500 tracking-widest">Filtros Dinámicos</h2> <form id="filter-form" class="space-y-4"> <div> <label class="text-[10px] font-bold uppercase text-gray-400">Palabra Clave</label> <input type="text" name="search" class="w-full mt-1 p-2 border rounded text-sm" placeholder="Título"> </div> <div> <label class="text-[10px] font-bold uppercase text-gray-400">Categoría</label> <select name="category" id="select-categories" class="w-full mt-1 p-2 border rounded text-sm"> <option value="">Cargando...</option> </select> </div> <div> <label class="text-[10px] font-bold uppercase text-gray-400">Etiqueta</label> <select name="tags" id="select-tags" class="w-full mt-1 p-2 border rounded text-sm"> <option value="">Cargando...</option> </select> </div> <div class="grid grid-cols-2 gap-2"> <div> <label class="text-[10px] font-bold uppercase text-gray-400">Precio Mín</label> <input type="number" name="price_min" class="w-full mt-1 p-2 border rounded text-sm" placeholder="0"> </div> <div> <label class="text-[10px] font-bold uppercase text-gray-400">Precio Máx</label> <input type="number" name="price_max" class="w-full mt-1 p-2 border rounded text-sm" placeholder="999"> </div> </div> <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded text-[10px] font-black uppercase hover:bg-blue-700 transition-colors">
-Aplicar Filtros
-</button> <button type="reset" id="btn-reset" class="w-full text-gray-400 py-1 text-[10px] uppercase hover:underline">
-Limpiar Filtros
-</button> </form> </aside> <main class="flex-1"> <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div> </main> </div> <script>
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Librería Dinámica">
+    <div class="flex flex-col md:flex-row gap-6 mt-6">
+        <aside class="w-full md:w-72 bg-white p-5 rounded border border-gray-200 h-fit sticky top-4">
+            <h2 class="font-bold text-xs uppercase mb-4 text-gray-500 tracking-widest">Filtros Dinámicos</h2>
+            
+            <form id="filter-form" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Palabra Clave</label>
+                    <input type="text" name="search" class="w-full mt-1 p-2 border rounded text-sm" placeholder="Título">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Categoría</label>
+                    <select name="category" id="select-categories" class="w-full mt-1 p-2 border rounded text-sm">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Etiqueta</label>
+                    <select name="tags" id="select-tags" class="w-full mt-1 p-2 border rounded text-sm">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Precio Mín</label>
+                        <input type="number" name="price_min" class="w-full mt-1 p-2 border rounded text-sm" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Precio Máx</label>
+                        <input type="number" name="price_max" class="w-full mt-1 p-2 border rounded text-sm" placeholder="999">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded text-[10px] font-black uppercase hover:bg-blue-700 transition-colors">
+                    Aplicar Filtros
+                </button>
+                <button type="reset" id="btn-reset" class="w-full text-gray-400 py-1 text-[10px] uppercase hover:underline">
+                    Limpiar Filtros
+                </button>
+            </form>
+        </aside>
+
+        <main class="flex-1">
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+        </main>
+    </div>
+
+<script is:inline>
     const API_URL = "http://localhost:3000";
     const grid = document.getElementById('products-grid');
     const filterForm = document.getElementById('filter-form');
@@ -103,10 +154,5 @@ Limpiar Filtros
 
     initFilters();
     loadProducts();
-</script>  </main> <script type="module">const t=localStorage.getItem("token"),e=document.getElementById("nav-links");t?(e.innerHTML+=`
-					<a href="/perfil" class="hover:text-blue-500">Mi Perfil</a>
-					<button id="logout" class="bg-red-500 text-white px-3 py-1 rounded">Salir</button>
-				`,document.getElementById("logout")?.addEventListener("click",()=>{localStorage.removeItem("token"),window.location.href="/login"})):e.innerHTML+=`
-					<a href="/login" class="hover:text-blue-500">Login</a>
-					<a href="/registro" class="hover:text-blue-500 font-bold">Registro</a>
-				`;</script> </body> </html>
+</script>
+</Layout>

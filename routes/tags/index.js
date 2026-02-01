@@ -22,7 +22,7 @@ const auth = require('@middleware/auth');
  *       200:
  *         description: Lista de etiquetas
  */
-router.get('/', auth, TagController.getAll);
+router.get('/', TagController.getAll);
 
 /**
  * @swagger

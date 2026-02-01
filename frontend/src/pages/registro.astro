@@ -1,0 +1,81 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Crear Cuenta">
+    <div class="max-w-md mx-auto bg-white p-8 border border-gray-200 rounded-lg shadow-sm mt-10">
+        <h1 class="text-2xl font-bold mb-6 text-center">Registro de Usuario</h1>
+        
+        <form id="register-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium">Nombre Completo</label>
+                <input type="text" id="nombre" name="nombre" required class="w-full p-2 border rounded mt-1" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Email</label>
+                <input type="email" id="email" name="email" required class="w-full p-2 border rounded mt-1" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Contraseña</label>
+                <input type="password" id="password" name="password" required class="w-full p-2 border rounded mt-1" minlength="6" />
+            </div>
+            <button type="submit" id="submit-btn" class="w-full bg-green-600 text-white py-2 rounded font-semibold hover:bg-green-700 transition-colors">
+                Registrarse
+            </button>
+            <p id="error-msg" class="text-red-500 text-sm hidden text-center mt-2"></p>
+        </form>
+    </div>
+
+    <script>
+        // Usamos una función autoejecutable para evitar conflictos de scope
+        (function() {
+            const registerForm = document.getElementById('register-form') as HTMLFormElement;
+            const errorMsg = document.getElementById('error-msg');
+            const API_URL = import.meta.env.PUBLIC_API_URL;
+
+            registerForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Captura robusta de valores
+                const formData = new FormData(registerForm);
+                const payload = Object.fromEntries(formData.entries());
+
+                console.log("Enviando a:", `${API_URL}/auth/register`);
+                console.table(payload);
+
+                try {
+                    const res = await fetch(`${API_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Si llega aquí, es que el POST se disparó
+                    console.log("Respuesta del servidor - Status:", res.status);
+                    
+                    const result = await res.json();
+                    console.log("JSON recibido:", result);
+
+                    if (res.ok && result.status === "success") {
+                        const token = result.data?.token;
+                        if (token) {
+                            localStorage.setItem('token', token);
+                            window.location.href = '/';
+                        }
+                    } else {
+                        if (errorMsg) {
+                            errorMsg.textContent = result.message || "Error en el registro";
+                            errorMsg.classList.remove('hidden');
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error en Fetch:", err);
+                    alert("No se pudo conectar con la API. Revisa la consola.");
+                }
+            });
+        })();
+    </script>
+</Layout>
