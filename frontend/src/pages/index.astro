@@ -1,132 +1,158 @@
 ---
 import Layout from '../layouts/Layout.astro';
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3000/api";
-
-let categorias = [];
-try {
-	// Intenta con 'categorías' o 'categories' según tu backend real
-	const catRes = await fetch(`${API_URL}/categorías`); 
-	if (catRes.ok) {
-		categorias = await catRes.json();
-	}
-} catch (e) {
-	console.error("Error cargando categorías:", e);
-}
 ---
 
-<Layout title="Catálogo de Productos">
-	<div class="flex flex-col md:flex-row gap-8">
-		<aside class="w-full md:w-64 space-y-6 bg-white p-4 rounded shadow-sm h-fit">
-			<h2 class="font-bold text-lg">Filtros</h2>
-			
-			<div>
-				<label class="block text-sm font-medium">Buscar</label>
-				<input type="text" id="filter-search" class="w-full border p-2 rounded text-sm" placeholder="Nombre, autor..." />
-			</div>
+<Layout title="Librería Dinámica">
+    <div class="flex flex-col md:flex-row gap-6 mt-6">
+        <aside class="w-full md:w-72 bg-white p-5 rounded border border-gray-200 h-fit sticky top-4">
+            <h2 class="font-bold text-xs uppercase mb-4 text-gray-500 tracking-widest">Filtros Dinámicos</h2>
+            
+            <form id="filter-form" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Palabra Clave</label>
+                    <input type="text" name="search" class="w-full mt-1 p-2 border rounded text-sm" placeholder="Título">
+                </div>
 
-			<div>
-				<label class="block text-sm font-medium">Categoría</label>
-				<select id="filter-category" class="w-full border p-2 rounded text-sm">
-					<option value="">Todas</option>
-					{categorias.map((cat: any) => (
-						<option value={cat.id}>{cat.name}</option>
-					))}
-				</select>
-			</div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Categoría</label>
+                    <select name="category" id="select-categories" class="w-full mt-1 p-2 border rounded text-sm">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
 
-			<div>
-				<label class="block text-sm font-medium">Precio Máximo</label>
-				<input type="range" id="filter-price" min="0" max="1000" step="10" class="w-full" />
-				<span id="price-value" class="text-xs text-gray-500">$1000</span>
-			</div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Etiqueta</label>
+                    <select name="tags" id="select-tags" class="w-full mt-1 p-2 border rounded text-sm">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
 
-			<button id="apply-filters" class="w-full bg-blue-600 text-white py-2 rounded text-sm font-bold">
-				Aplicar Filtros
-			</button>
-		</aside>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Precio Mín</label>
+                        <input type="number" name="price_min" class="w-full mt-1 p-2 border rounded text-sm" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Precio Máx</label>
+                        <input type="number" name="price_max" class="w-full mt-1 p-2 border rounded text-sm" placeholder="999">
+                    </div>
+                </div>
 
-		<section class="flex-1">
-			<div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-				<p class="text-center col-span-full">Cargando productos...</p>
-			</div>
-		</section>
-	</div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded text-[10px] font-black uppercase hover:bg-blue-700 transition-colors">
+                    Aplicar Filtros
+                </button>
+                <button type="reset" id="btn-reset" class="w-full text-gray-400 py-1 text-[10px] uppercase hover:underline">
+                    Limpiar Filtros
+                </button>
+            </form>
+        </aside>
 
-	<script>
-		const API_URL = import.meta.env.PUBLIC_API_URL;
-		const grid = document.getElementById('products-grid');
-		const btnFilter = document.getElementById('apply-filters');
+        <main class="flex-1">
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+        </main>
+    </div>
 
-		async function loadProducts() {
-    const search = (document.getElementById('filter-search') as HTMLInputElement).value;
-    const category = (document.getElementById('filter-category') as HTMLSelectElement).value;
-    const priceMax = (document.getElementById('filter-price') as HTMLInputElement).value;
+<script is:inline>
+    const API_URL = "http://localhost:3000";
+    const grid = document.getElementById('products-grid');
+    const filterForm = document.getElementById('filter-form');
+    const selectCategories = document.getElementById('select-categories');
+    const selectTags = document.getElementById('select-tags');
 
-    // 1. Usamos los nombres de parámetros que pide tu API (en inglés)
-    const params = new URLSearchParams();
-    if (search) params.append('search', search);
-    if (category) params.append('category', category);
-    if (priceMax) params.append('price_max', priceMax);
+    async function initFilters() {
+        try {
+            const [catRes, tagRes] = await Promise.all([
+                fetch(`${API_URL}/categories`),
+                fetch(`${API_URL}/tags`)
+            ]);
+            const cats = await catRes.json();
+            const tags = await tagRes.json();
 
-    // Tu URL confirmada es /products (en inglés y plural)
-    const targetUrl = `${API_URL}/products?${params.toString()}`;
-    console.log("Cargando desde:", targetUrl);
+            selectCategories.innerHTML = '<option value="">Todas las categorías</option>' + 
+                cats.data.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
 
-    try {
-        const res = await fetch(targetUrl);
-        const result = await res.json();
+            selectTags.innerHTML = '<option value="">Cualquier etiqueta</option>' + 
+                tags.data.tags.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        } catch (error) { console.error("Error filtros:", error); }
+    }
 
-        // 2. Accedemos a result.data.products según tu respuesta de servidor
-        const products = result.data?.products || [];
+    async function loadProducts(queryString = "") {
+        grid.innerHTML = '<div class="col-span-full text-center py-20 text-gray-400">Consultando catálogo...</div>';
+        try {
+            const response = await fetch(`${API_URL}/products?${queryString}`);
+            const result = await response.json();
+            const products = result.data.products || [];
 
-        if (grid) {
             if (products.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-center py-10">No se encontraron productos.</p>';
+                grid.innerHTML = '<div class="col-span-full text-center py-20 border-2 border-dashed rounded text-gray-400">Sin resultados</div>';
                 return;
             }
 
-            grid.innerHTML = products.map((p: any) => `
-                <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
-                    <div class="h-48 bg-gray-100 rounded mb-4 flex items-center justify-center text-gray-400">
-                        <span class="text-xs uppercase font-bold tracking-widest">${p.format || 'Libro'}</span>
+            grid.innerHTML = products.map(p => `
+                <div class="bg-white border border-gray-100 p-5 rounded-lg flex flex-col hover:border-blue-400 transition-all">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[9px] font-bold bg-blue-50 text-blue-500 px-2 py-0.5 rounded uppercase">${p.category.name}</span>
+                        <span class="font-bold text-gray-900">$${p.price}</span>
                     </div>
-                    <h3 class="font-bold text-lg leading-tight h-12 overflow-hidden">${p.name}</h3>
-                    <p class="text-gray-500 text-sm mb-2">${p.author || 'Autor desconocido'}</p>
-                    <div class="mt-4 flex justify-between items-center">
-                        <span class="text-xl font-bold text-blue-700">$${p.price}</span>
-                        <button 
-                            onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price})"
-                            class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 active:scale-95 transition-transform"
-                        >
-                            Añadir
-                        </button>
+                    <h3 class="font-bold text-gray-800 text-sm mb-1 uppercase">${p.name}</h3>
+                    <p class="text-[10px] text-gray-400 mb-1 italic">Autor: ${p.author}</p>
+                    
+                    <p class="text-[10px] font-bold mb-3 ${p.stock > 0 ? 'text-green-600' : 'text-red-600'}">
+                        STOCK DISPONIBLE: ${p.stock}
+                    </p>
+
+                    <p class="text-xs text-gray-500 line-clamp-2 mb-4 flex-grow leading-relaxed">${p.description}</p>
+                    <div class="flex gap-1 mb-4 flex-wrap">
+                        ${p.tags.map(t => `<span class="text-[8px] bg-gray-50 text-gray-400 border border-gray-100 px-1.5 py-0.5 rounded">#${t.name}</span>`).join('')}
                     </div>
+                    
+                    <button 
+                        onclick="addToCart({productId: ${p.id}, name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, stock: ${p.stock}})"
+                        class="w-full border-2 border-gray-900 py-2 rounded text-[10px] font-black uppercase hover:bg-gray-900 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        ${p.stock <= 0 ? 'disabled' : ''}
+                    >
+                        ${p.stock > 0 ? 'Agregar al Carrito' : 'Agotado'}
+                    </button>
                 </div>
             `).join('');
-        }
-    } catch (e) {
-        console.error("Error cargando productos:", e);
-        if (grid) grid.innerHTML = '<p class="text-red-500">Error de conexión.</p>';
+        } catch (error) { grid.innerHTML = '<div class="col-span-full text-center py-20 text-red-400">Error de API</div>'; }
     }
-}
 
-		// Función global para el botón de añadir (lógica simple de carrito)
-		(window as any).addToCart = (id: number, name: string, price: number) => {
-			const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-			const existing = cart.find((item: any) => item.productId === id);
-			
-			if (existing) {
-				existing.quantity += 1;
-			} else {
-				cart.push({ productId: id, name, price, quantity: 1 });
-			}
-			
-			localStorage.setItem('cart', JSON.stringify(cart));
-			alert(`${name} añadido al carrito`);
-		};
+    // 3. Lógica de Carrito con Bloqueo de Stock
+    window.addToCart = (product) => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const existing = cart.find(item => item.productId === product.productId);
+        
+        const currentQty = existing ? existing.quantity : 0;
 
-		btnFilter?.addEventListener('click', loadProducts);
-		// Carga inicial
-		loadProducts();
-	</script>
+        // Si lo que intenta agregar supera el stock real, no lo dejamos
+        if (currentQty >= product.stock) {
+            alert(`No puedes agregar más. Solo quedan ${product.stock} unidades en stock.`);
+            return;
+        }
+
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({ ...product, quantity: 1 });
+        }
+        
+        localStorage.setItem('cart', JSON.stringify(cart));
+        alert(`${product.name} añadido al carrito.`);
+    };
+
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams(new FormData(filterForm));
+        loadProducts(params.toString());
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        setTimeout(() => loadProducts(), 10);
+    });
+
+    initFilters();
+    loadProducts();
+</script>
 </Layout>

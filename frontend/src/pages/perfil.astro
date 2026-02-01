@@ -3,86 +3,136 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Mi Perfil">
-    <div class="max-w-4xl mx-auto space-y-8 mt-10">
-        <header class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-600">
-            <h1 class="text-2xl font-bold">Panel de Usuario</h1>
-            <p class="text-gray-600">Bienvenido a tu historial de compras.</p>
+    <div id="order-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <div>
+                    <h2 class="text-xl font-black uppercase" id="modal-order-id">Detalle de Orden</h2>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase" id="modal-order-date"></p>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="modal-content" class="p-6 max-height-[70vh] overflow-y-auto space-y-4">
+                </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-between items-center">
+                <span class="font-bold text-gray-500 uppercase text-xs">Total Pagado:</span>
+                <span class="text-2xl font-black text-blue-600" id="modal-total"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto space-y-8 mt-10 px-4 pb-20">
+        <header class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black uppercase tracking-tighter text-gray-800">Panel de Usuario</h1>
+                <p class="text-gray-400 text-sm font-medium">Historial de transacciones y pedidos.</p>
+            </div>
+            <button onclick="logout()" class="text-[10px] font-bold bg-red-50 text-red-500 px-4 py-2 rounded-full hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest">
+                Cerrar Sesión
+            </button>
         </header>
 
         <section>
-            <h2 class="text-xl font-semibold mb-4">Mis Pedidos Recientes</h2>
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Mis Pedidos Recientes</h2>
             <div id="orders-container" class="space-y-4">
-                <p class="text-gray-500 italic">Cargando historial...</p>
+                <p class="text-gray-500 italic">Consultando servidor...</p>
             </div>
         </section>
     </div>
 
     <script is:inline>
+        // 🛡️ PROTECCIÓN DE RUTA
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
+
+        let ordersData = []; // Guardaremos las órdenes aquí para acceder rápido al detalle
+
         async function loadOrders() {
-            const API_URL = "http://localhost:3000"; // Asegúrate que coincida con tu env
+            const API_URL = "http://localhost:3000";
             const ordersContainer = document.getElementById('orders-container');
             const token = localStorage.getItem('token');
 
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
-
             try {
-                // Usamos /orders (sin tildes) como indica tu documentación
                 const res = await fetch(`${API_URL}/orders`, { 
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 });
 
                 const result = await res.json();
-                console.log("Historial recibido:", result);
 
                 if (res.ok && result.status === "success") {
-                    // Acceso exacto según tu JSON de respuesta
-                    const orders = result.data.orders || [];
+                    ordersData = result.data.orders || [];
                     
-                    if (orders.length === 0) {
-                        ordersContainer.innerHTML = `
-                            <div class="bg-white p-6 rounded shadow text-center">
-                                <p class="text-gray-500">Aún no has realizado ninguna compra.</p>
-                                <a href="/" class="text-blue-600 hover:underline mt-2 block font-medium">Ir a la tienda</a>
-                            </div>`;
+                    if (ordersData.length === 0) {
+                        ordersContainer.innerHTML = `<div class="bg-white p-10 rounded-xl border border-dashed text-center"><p class="text-gray-400 uppercase font-bold text-xs">No hay compras registradas</p></div>`;
                         return;
                     }
 
-                    ordersContainer.innerHTML = orders.map((order) => `
-                        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center hover:border-blue-300 transition-colors">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">#ORD-${order.id}</span>
-                                    <span class="text-sm text-gray-400">${new Date(order.createdAt).toLocaleDateString()}</span>
+                    ordersContainer.innerHTML = ordersData.map((order) => `
+                        <div class="bg-white p-6 rounded-xl border border-gray-100 flex justify-between items-center hover:shadow-md transition-all group">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[10px] font-black bg-blue-600 text-white px-2 py-0.5 rounded italic">#ORD-${order.id}</span>
+                                    <span class="text-xs font-bold text-gray-400 uppercase">${new Date(order.createdAt).toLocaleDateString()}</span>
                                 </div>
-                                <p class="font-bold text-gray-800 text-lg">Total: $${order.totalAmount.toFixed(2)}</p>
-                                <p class="text-sm text-gray-500">
-                                    Items: ${order.items.length} productos
-                                </p>
+                                <p class="font-black text-gray-900 text-xl tracking-tight">$${order.totalAmount.toFixed(2)}</p>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${order.items.length} Productos adquiridos</p>
                             </div>
-                            <div class="text-right flex flex-col items-end gap-2">
-                                <span class="px-3 py-1 ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} rounded-full text-xs font-bold uppercase">
+                            <div class="flex flex-col items-end gap-3">
+                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}">
                                     ${order.status}
                                 </span>
-                                <button class="text-blue-600 text-xs font-semibold hover:text-blue-800 uppercase tracking-wider">
-                                    Ver Detalle
+                                <button onclick="showDetail(${order.id})" class="text-[10px] font-black text-blue-600 border-b-2 border-transparent hover:border-blue-600 uppercase tracking-widest transition-all">
+                                    Ver Detalle →
                                 </button>
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    ordersContainer.innerHTML = '<p class="text-red-500 bg-red-50 p-4 rounded text-center">No se pudo cargar el historial. Intenta re-iniciar sesión.</p>';
+                    ordersContainer.innerHTML = '<p class="text-red-500">Error al cargar datos.</p>';
                 }
             } catch (err) {
-                console.error("Error en perfil:", err);
-                ordersContainer.innerHTML = '<p class="text-red-500 text-center">Error de conexión con el servidor.</p>';
+                ordersContainer.innerHTML = '<p class="text-red-500">Error de conexión.</p>';
             }
         }
+
+        // LÓGICA DEL MODAL (VER MÁS)
+        window.showDetail = (orderId) => {
+            const order = ordersData.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('modal-order-id').innerText = `ORDEN #ORD-${order.id}`;
+            document.getElementById('modal-order-date').innerText = `Fecha: ${new Date(order.createdAt).toLocaleString()}`;
+            document.getElementById('modal-total').innerText = `$${order.totalAmount.toFixed(2)}`;
+
+            const content = order.items.map(item => `
+                <div class="flex gap-4 items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="w-12 h-12 bg-blue-600 rounded flex items-center justify-center text-white font-black text-xs">LIB</div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-black text-gray-800 uppercase leading-none mb-1">${item.product.name}</h4>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-tight italic">Autor: ${item.product.author}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-black text-gray-900">${item.quantity} x $${item.unitPrice}</p>
+                        <p class="text-[10px] font-bold text-blue-600">Sub: $${(item.quantity * item.unitPrice).toFixed(2)}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('order-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Evita scroll atrás
+        };
+
+        window.closeModal = () => {
+            document.getElementById('order-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
+
+        window.logout = () => {
+            localStorage.clear();
+            window.location.href = '/login';
+        };
 
         loadOrders();
     </script>

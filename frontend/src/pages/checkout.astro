@@ -3,139 +3,119 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Finalizar Compra">
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">Datos de Pago</h1>
+    <div class="max-w-2xl mx-auto mt-10 px-4">
+        <h1 class="text-2xl font-black mb-6 uppercase tracking-tight text-gray-800">Finalizar Pago</h1>
         
-        <div id="summary" class="mb-6 p-4 bg-gray-50 rounded-lg border">
-            <h2 class="font-bold border-b pb-2 mb-2">Resumen de Productos</h2>
-            <div id="items-list" class="text-sm space-y-1"></div>
+        <div id="summary" class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <h2 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Productos en tu bolsa</h2>
+            <div id="items-list" class="space-y-3 text-sm">
+                </div>
         </div>
 
-        <form id="checkout-form" class="bg-white p-6 rounded-lg shadow space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="block text-sm">Nombre en la Tarjeta</label>
-                    <input type="text" id="form-fullName" value="APROBADO" class="w-full border p-2 rounded" required />
-                </div>
-                <div>
-                    <label class="block text-sm">Número de Tarjeta</label>
-                    <input type="text" id="form-cardNumber" value="4111111111111111" class="w-full border p-2 rounded" required />
-                </div>
-                <div>
-                    <label class="block text-sm">CVV</label>
-                    <input type="text" id="form-cvv" value="123" class="w-full border p-2 rounded" required />
+        <form id="checkout-form" class="space-y-6">
+            <input type="hidden" id="form-fullName" value="APROBADO" />
+            <input type="hidden" id="form-currency" value="USD" />
+
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                <h3 class="font-bold text-gray-700 text-sm uppercase">Información de Tarjeta</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-3">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Número de Tarjeta</label>
+                        <input type="text" id="form-cardNumber" value="4111111111111111" 
+                            class="w-full border-b-2 border-gray-200 p-2 focus:border-blue-500 outline-none transition-colors font-mono" required />
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">CVV</label>
+                        <input type="text" id="form-cvv" value="123" 
+                            class="w-full border-b-2 border-gray-200 p-2 focus:border-blue-500 outline-none transition-colors font-mono" required />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mes Expiración (MM)</label>
+                        <input type="text" id="form-expMonth" value="01" 
+                            class="w-full border-b-2 border-gray-200 p-2 focus:border-blue-500 outline-none transition-colors" required />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Año Expiración (YYYY)</label>
+                        <input type="text" id="form-expYear" value="2026" 
+                            class="w-full border-b-2 border-gray-200 p-2 focus:border-blue-500 outline-none transition-colors" required />
+                    </div>
                 </div>
             </div>
-            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded font-bold hover:bg-green-700">
-                Pagar Ahora
+
+            <button type="submit" id="btn-submit" class="w-full bg-blue-600 text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md active:translate-y-0.5">
+                Pagar y Confirmar Orden
             </button>
         </form>
     </div>
 
 <script is:inline>
-    // 1. Punto de control inicial
-    console.log("🛠️ Script de Checkout cargado");
+    // 1. Carga de productos del carrito
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const itemsList = document.getElementById('items-list');
 
-    function initCheckout() {
-        const cartData = localStorage.getItem('cart');
-        const cart = JSON.parse(cartData || '[]');
-        const itemsList = document.getElementById('items-list');
-        
-        console.log("🛒 Contenido del carrito:", cart);
-
-        if (itemsList) {
-            if (cart.length === 0) {
-                itemsList.innerHTML = '<p class="text-red-500 font-bold">El carrito está vacío. Regresa al catálogo.</p>';
-                return;
-            }
-            itemsList.innerHTML = cart.map(i => `
-                <div class="flex justify-between border-b py-1">
-                    <span>${i.name} (x${i.quantity})</span>
-                    <span class="font-bold">$${(i.price * i.quantity).toFixed(2)}</span>
-                </div>
-            `).join('');
-        }
-
-        const form = document.getElementById('checkout-form');
-        if (!form) {
-            console.error("❌ No se encontró el formulario #checkout-form");
-            return;
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log("🚀 Enviando formulario...");
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert("No hay token de sesión. Por favor inicia sesión.");
-                window.location.href = '/login';
-                return;
-            }
-
-            // Capturamos los valores con seguridad
-            const nameField = document.getElementById('form-fullName');
-            const cardField = document.getElementById('form-cardNumber');
-            const cvvField = document.getElementById('form-cvv');
-
-// ... dentro del submit event listener ...
-
-// 1. Validamos qué estamos sacando del carrito antes de enviar
-const formattedItems = cart.map(item => {
-    // Según tu log, el ID viene como 'productId'
-    const id = item.productId || item.id; 
-    return {
-        productId: Number(id),
-        quantity: Number(item.quantity)
-    };
-});
-
-console.log("📦 Items formateados para la API:", formattedItems);
-
-const orderBody = {
-    items: formattedItems,
-    paymentMethod: "CreditCard",
-    paymentDetails: {
-        cardNumber: document.getElementById('form-cardNumber').value,
-        cvv: document.getElementById('form-cvv').value,
-        expirationMonth: "01",
-        expirationYear: "2026",
-        fullName: document.getElementById('form-fullName').value,
-        currency: "USD",
-        description: "Compra en tienda",
-        reference: `order-${Date.now()}`
-    }
-};
-
-            try {
-                const res = await fetch('http://localhost:3000/orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(orderBody)
-                });
-
-                const result = await res.json();
-                console.log("📡 Respuesta del servidor:", result);
-
-                if (res.ok) {
-                    alert("✅ PAGO EXITOSO");
-                    localStorage.removeItem('cart');
-                    window.location.href = '/';
-                } else {
-                    alert("❌ Error: " + (result.data?.message || "No se pudo procesar"));
-                }
-            } catch (err) {
-                console.error("🔥 Error crítico en la petición:", err);
-                alert("Error de conexión con el servidor.");
-            }
-        });
+    if (cart.length === 0) {
+        itemsList.innerHTML = '<p class="text-center text-gray-400">Tu carrito está vacío</p>';
+        document.getElementById('btn-submit').disabled = true;
+        document.getElementById('btn-submit').style.opacity = '0.5';
+    } else {
+        itemsList.innerHTML = cart.map(item => `
+            <div class="flex justify-between font-medium">
+                <span class="text-gray-600">${item.name} <span class="text-xs text-gray-400">x${item.quantity}</span></span>
+                <span class="text-gray-900">$${(item.price * item.quantity).toFixed(2)}</span>
+            </div>
+        `).join('');
     }
 
-    // Ejecutamos la función de inicio
-    initCheckout();
+    // 2. Manejo del pago
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit');
+        btn.disabled = true;
+        btn.innerText = "PROCESANDO PAGO...";
+
+        const orderBody = {
+            items: cart.map(i => ({ productId: Number(i.productId), quantity: Number(i.quantity) })),
+            paymentMethod: "CreditCard",
+            paymentDetails: {
+                cardNumber: document.getElementById('form-cardNumber').value,
+                cvv: document.getElementById('form-cvv').value,
+                expirationMonth: document.getElementById('form-expMonth').value,
+                expirationYear: document.getElementById('form-expYear').value,
+                fullName: document.getElementById('form-fullName').value, // Sigue enviando "APROBADO"
+                currency: "USD",
+                description: "Compra segura de libros",
+                reference: `WEB-${Date.now()}`
+            }
+        };
+
+        try {
+            const res = await fetch('http://localhost:3000/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(orderBody)
+            });
+
+            if (res.ok) {
+                alert("¡Compra realizada con éxito!");
+                localStorage.removeItem('cart');
+                window.location.href = '/perfil';
+            } else {
+                const errorData = await res.json();
+                alert("Error: " + (errorData.message || "No se pudo procesar el pago"));
+                btn.disabled = false;
+                btn.innerText = "Pagar y Confirmar Orden";
+            }
+        } catch (error) {
+            alert("Error de conexión con la API");
+            btn.disabled = false;
+        }
+    });
 </script>
 </Layout>

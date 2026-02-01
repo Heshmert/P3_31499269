@@ -4,12 +4,12 @@
   "type": "commonjs",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www && npx prisma generate && npx prisma migrate deploy",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "prisma:setup": "npx prisma generate && npx prisma migrate deploy",
     "seed": "node prisma/seed.js",
+    "start": "npm run build:frontend && npm run prisma:setup && node ./bin/www",
     "dev": "nodemon ./bin/www",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
     "prisma": "npx prisma generate && npx prisma migrate dev"
   },
   "dependencies": {
